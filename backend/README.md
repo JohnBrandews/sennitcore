@@ -112,7 +112,7 @@ This is the backend API for the SendIT delivery application.
 ## Prerequisites
 
 - Node.js (v18 or higher)
-- MongoDB database (local or MongoDB Atlas)
+- PostgreSQL database (local or hosted, such as Neon)
 - SMTP email service (Gmail, SendGrid, etc.)
 
 ## Installation
@@ -133,6 +133,11 @@ cp .env.example .env
 ## Environment Configuration
 
 ### Database Configuration
+
+This project uses PostgreSQL. Configure `DATABASE_URL` with a PostgreSQL connection
+string (for example, `postgresql://USER:PASSWORD@HOST:5432/DATABASE?schema=public`).
+The MongoDB examples below are obsolete and do not apply to this project.
+
 ```env
 # For local MongoDB:
 DATABASE_URL="mongodb://localhost:27017/sendit_db"
@@ -186,12 +191,22 @@ FRONTEND_URL=http://localhost:4200
 
 4. Set up the database:
 ```bash
-# Generate Prisma Client
-npx prisma generate
+# Apply migrations to a fresh or already-migrated development database
+npx prisma migrate dev
 
-# Push schema to MongoDB (MongoDB doesn't use traditional migrations)
-npx prisma db push
+# Optionally add demo data
+npm run db:seed
 ```
+
+For deployments, apply committed migrations with `npx prisma migrate deploy`.
+Do not use `prisma db push` as the deployment migration strategy.
+
+The migration history was re-baselined to match the current Prisma schema. The
+baseline migration is intended for a fresh database. To rebuild the disposable
+Neon database that previously used `db push` or the old migrations, run
+`npx prisma migrate reset` from `backend` (this deletes all data). Do not reset
+a database containing data you need to keep; existing databases using the old
+migration history need a separate migration plan before deployment.
 
 5. Start the development server:
 ```bash
